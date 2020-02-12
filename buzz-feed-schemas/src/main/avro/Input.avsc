@@ -1,0 +1,20 @@
+{
+  "type": "record",
+  "name": "Input",
+  "namespace": "com.pubsap.eng.schema",
+  "doc": "",
+  "fields": [
+    {
+      "name": "value",
+      "type": "long",
+      "doc": ""
+    },
+    {
+      "name": "timestamp",
+      "type": {
+        "logicalType": "timestamp-millis",
+        "type": "long"
+      }
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "type": "record",
+  "name": "OutputKey",
+  "namespace": "org.pubsap.eng.schema",
+  "doc": "",
+  "fields": [
+    {
+      "name": "name",
+      "type": "string",
+      "doc": ""
+    },
+    {
+      "name": "window_start",
+      "type": "string",
+      "doc": ""
+    },
+    {
+      "name": "window_stop",
+      "type": "string",
+      "doc": ""
+    }
+  ]
+}

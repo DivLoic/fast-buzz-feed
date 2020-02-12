@@ -1,0 +1,18 @@
+{
+  "type": "record",
+  "name": "Item",
+  "namespace": "com.pubsap.eng.schema",
+  "doc": "",
+  "fields": [
+    {
+      "doc": "",
+      "name": "type",
+      "type": {
+        "type": "enum",
+        "name": "ItemValue",
+        "namespace": "com.pubsap.eng.schema",
+        "symbols" : ["Buzz", "Feed", "BuzzFeed", "None"]
+      }
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "type": "record",
+  "name": "InputKey",
+  "namespace": "com.pubsap.eng.schema",
+  "doc": "",
+  "fields": [
+    {
+      "name": "name",
+      "type": "string",
+      "doc": ""
+    }
+  ]
+}
