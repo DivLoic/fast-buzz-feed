@@ -9,12 +9,12 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>buzz-feed-streams</artifactId>
+    <artifactId>fizz-buzz-streams</artifactId>
 
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>buzz-feed-schemas</artifactId>
+            <artifactId>fizz-buzz-schemas</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

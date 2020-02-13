@@ -1,9 +1,6 @@
 package com.pubsap.eng.streams;
 
-import com.pubsap.eng.schema.Input;
-import com.pubsap.eng.schema.InputKey;
-import com.pubsap.eng.schema.Item;
-import com.pubsap.eng.schema.Output;
+import com.pubsap.eng.schema.*;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde;
@@ -11,7 +8,6 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.streams.*;
 import org.apache.kafka.streams.kstream.*;
-import org.pubsap.eng.schema.OutputKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,9 +43,7 @@ public class Main {
                         .with(inputKeySerde, inputSerde)
                         .withTimestampExtractor(new InputtimestampExtractor());
 
-        Produced<OutputKey, Output> producedCount =
-
-                Produced.with(outputKeySerde, outputSerde);
+        Produced<OutputKey, Output> producedCount = Produced.with(outputKeySerde, outputSerde);
 
         Grouped<InputKey, Item> groupedItem = Grouped.with(inputKeySerde, itemSerde).withName("grouped-item");
 
@@ -58,9 +52,9 @@ public class Main {
                 .filterNot((key, value) -> key.getName().equals("None"))
 
                 .mapValues(value -> {
-                    if (value.getValue() % 15 == 0) return new Item(BuzzFeed);
-                    else if (value.getValue() % 5 == 0) return new Item(Feed);
-                    else if (value.getValue() % 3 == 0) return new Item(Buzz);
+                    if (value.getValue() % 15 == 0) return new Item(FizzBuzz);
+                    else if (value.getValue() % 5 == 0) return new Item(Buzz);
+                    else if (value.getValue() % 3 == 0) return new Item(Fizz);
                     else return new Item(None);
                 })
 
@@ -71,36 +65,36 @@ public class Main {
                 .windowedBy(timeWindow)
 
                 .aggregate(
-                        () -> new Output(0L, 0L, 0L),
+                        () -> new Output(0, 0, 0),
                         (key, value, stringLongMap) -> {
                             Output result = null;
 
                             switch (value.getType()) {
-                                case BuzzFeed:
+                                case FizzBuzz:
                                     result = new Output(
+                                            stringLongMap.getFizz(),
                                             stringLongMap.getBuzz(),
-                                            stringLongMap.getFeed(),
-                                            stringLongMap.getBuzzFeed() + 1L
-                                    );
-                                    break;
-
-                                case Feed:
-                                    result = new Output(
-                                            stringLongMap.getBuzz(),
-                                            stringLongMap.getFeed() + 1L,
-                                            stringLongMap.getBuzzFeed()
+                                            stringLongMap.getFizzBuzz() + 1
                                     );
                                     break;
 
                                 case Buzz:
                                     result = new Output(
+                                            stringLongMap.getFizz(),
+                                            stringLongMap.getBuzz() + 1,
+                                            stringLongMap.getFizzBuzz()
+                                    );
+                                    break;
+
+                                case Fizz:
+                                    result = new Output(
+                                            stringLongMap.getFizz(),
                                             stringLongMap.getBuzz(),
-                                            stringLongMap.getFeed(),
-                                            stringLongMap.getBuzzFeed()
+                                            stringLongMap.getFizzBuzz()
                                     );
                                     break;
                                 default:
-                                    result = new Output(0L, 0L, 0L);
+                                    result = new Output(0, 0, 0);
                             }
                             return result;
                         },
@@ -111,7 +105,7 @@ public class Main {
                 .map((key, value) -> new KeyValue<>(new OutputKey(
                         key.key().getName(),
                         key.window().startTime().toString(),
-                        key.window().startTime().toString()), value)
+                        key.window().endTime().toString()), value)
                 )
 
                 .to("buzz-feed-output", Produced.with(outputKeySerde, outputSerde));

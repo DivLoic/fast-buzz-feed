@@ -10,9 +10,9 @@
     <version>1.0-SNAPSHOT</version>
 
     <modules>
-        <module>buzz-feed-schemas</module>
-        <module>buzz-feed-streams</module>
-        <module>buzz-feed-generator</module>
+        <module>fizz-buzz-schemas</module>
+        <module>fizz-buzz-streams</module>
+        <module>fizz-buzz-generator</module>
     </modules>
 
     <properties>

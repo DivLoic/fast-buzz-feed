@@ -5,18 +5,18 @@
   "doc": "",
   "fields": [
     {
+      "name": "fizz",
+      "type": "int",
+      "doc": ""
+    },
+    {
       "name": "buzz",
-      "type": "long",
+      "type": "int",
       "doc": ""
     },
     {
-      "name": "feed",
-      "type": "long",
-      "doc": ""
-    },
-    {
-      "name": "buzz_feed",
-      "type": "long",
+      "name": "fizz_buzz",
+      "type": "int",
       "doc": ""
     }
   ]

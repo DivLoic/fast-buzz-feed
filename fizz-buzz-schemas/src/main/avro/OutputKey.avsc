@@ -1,7 +1,7 @@
 {
   "type": "record",
   "name": "OutputKey",
-  "namespace": "org.pubsap.eng.schema",
+  "namespace": "com.pubsap.eng.schema",
   "doc": "",
   "fields": [
     {

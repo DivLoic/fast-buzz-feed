@@ -10,12 +10,12 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>buzz-feed-generator</artifactId>
+    <artifactId>fizz-buzz-generator</artifactId>
 
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>buzz-feed-schemas</artifactId>
+            <artifactId>fizz-buzz-schemas</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

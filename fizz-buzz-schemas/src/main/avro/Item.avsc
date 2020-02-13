@@ -11,7 +11,7 @@
         "type": "enum",
         "name": "ItemValue",
         "namespace": "com.pubsap.eng.schema",
-        "symbols" : ["Buzz", "Feed", "BuzzFeed", "None"]
+        "symbols" : ["Fizz", "Buzz", "FizzBuzz", "None"]
       }
     }
   ]

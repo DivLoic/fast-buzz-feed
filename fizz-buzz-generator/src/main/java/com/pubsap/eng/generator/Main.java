@@ -66,7 +66,7 @@ public class Main {
     }
 
     public static Input nextInput() {
-        return new Input(new Random().nextLong(), Instant.now());
+        return new Input(new Random().nextInt(300), Instant.now());
     }
 
     public static InputKey nextInputKey() {
