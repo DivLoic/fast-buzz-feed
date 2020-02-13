@@ -7,7 +7,7 @@ import org.apache.kafka.streams.processor.TimestampExtractor;
 /**
  * Created by loicmdivad.
  */
-public class InputtimestampExtractor implements TimestampExtractor {
+public class InputTimestampExtractor implements TimestampExtractor {
 
     @Override
     public long extract(ConsumerRecord<Object, Object> consumerRecord, long l) {

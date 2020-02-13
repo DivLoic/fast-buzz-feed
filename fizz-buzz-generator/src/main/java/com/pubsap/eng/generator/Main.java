@@ -61,7 +61,7 @@ public class Main {
             Input value = nextInput();
             InputKey key = nextInputKey();
             logger.info("producing: " + value);
-            producer.send(new ProducerRecord<>("buzz-feed-input", key, value));
+            producer.send(new ProducerRecord<>("fizz-buzz-input", key, value));
         }
     }
 

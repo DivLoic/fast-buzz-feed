@@ -13,8 +13,10 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Properties;
 
+import static com.pubsap.eng.common.FizzUtils.mapFormConfig;
 import static com.pubsap.eng.schema.ItemValue.*;
 
 /**
@@ -32,8 +34,8 @@ public class Main {
                                          Serde<Output> outputSerde,
                                          Serde<OutputKey> outputKeySerde) {
 
-        String inputTopic = config.getString("input.topic.name");
-        String outputTopic = config.getString("output.topic.name");
+        String inputTopic = config.getString("topic.input.name");
+        String outputTopic = config.getString("topic.output.name");
 
         StreamsBuilder builder = new StreamsBuilder();
 
@@ -41,13 +43,13 @@ public class Main {
 
                 Consumed
                         .with(inputKeySerde, inputSerde)
-                        .withTimestampExtractor(new InputtimestampExtractor());
+                        .withTimestampExtractor(new InputTimestampExtractor());
 
         Produced<OutputKey, Output> producedCount = Produced.with(outputKeySerde, outputSerde);
 
         Grouped<InputKey, Item> groupedItem = Grouped.with(inputKeySerde, itemSerde).withName("grouped-item");
 
-        builder.stream("buzz-feed-input", inputConsumed)
+        builder.stream(inputTopic, inputConsumed)
 
                 .filterNot((key, value) -> key.getName().equals("None"))
 
@@ -108,7 +110,7 @@ public class Main {
                         key.window().endTime().toString()), value)
                 )
 
-                .to("buzz-feed-output", Produced.with(outputKeySerde, outputSerde));
+                .to(outputTopic, Produced.with(outputKeySerde, outputSerde));
 
         return builder.build();
     }
@@ -121,8 +123,13 @@ public class Main {
 
         properties.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, config.getString("bootstrap.servers"));
         properties.put(StreamsConfig.APPLICATION_ID_CONFIG, config.getString("application.id"));
-        properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
+        properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, config.getString("reset.offset"));
         properties.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, 0);
+
+        properties.putAll(mapFormConfig(config.getConfig("kafka-client")));
+
+        Map<String, Object> schemaRegistryConfigMap = mapFormConfig(config.getConfig("schema-client"));
+        schemaRegistryConfigMap.put(srConfigKey, config.getString(srConfigKey));
 
         SpecificAvroSerde<Item> itemSerde = new SpecificAvroSerde<>();
         SpecificAvroSerde<Input> inputSerde = new SpecificAvroSerde<>();
@@ -130,17 +137,17 @@ public class Main {
         SpecificAvroSerde<InputKey> inputKeySerde = new SpecificAvroSerde<>();
         SpecificAvroSerde<OutputKey> outputKeySerde = new SpecificAvroSerde<>();
 
-        itemSerde.configure(Collections.singletonMap(srConfigKey, config.getString(srConfigKey)), false);
-        inputSerde.configure(Collections.singletonMap(srConfigKey, config.getString(srConfigKey)), false);
-        outputSerde.configure(Collections.singletonMap(srConfigKey, config.getString(srConfigKey)), false);
-        inputKeySerde.configure(Collections.singletonMap(srConfigKey, config.getString(srConfigKey)), true);
-        outputKeySerde.configure(Collections.singletonMap(srConfigKey, config.getString(srConfigKey)), true);
+        itemSerde.configure(schemaRegistryConfigMap, false);
+        inputSerde.configure(schemaRegistryConfigMap, false);
+        outputSerde.configure(schemaRegistryConfigMap, false);
+        inputKeySerde.configure(schemaRegistryConfigMap, true);
+        outputKeySerde.configure(schemaRegistryConfigMap, true);
 
         TimeWindows windows = TimeWindows
 
-                .of(Duration.ofSeconds(20))
+                .of(config.getDuration("window.size"))
 
-                .advanceBy(Duration.ofSeconds(20));
+                .advanceBy(config.getDuration("window.step"));
 
         Topology topology = buildTopology(
                 config,
@@ -152,7 +159,7 @@ public class Main {
                 outputKeySerde
         );
 
-        logger.debug(topology.describe().toString());
+        logger.info(topology.describe().toString());
 
         final KafkaStreams streams = new KafkaStreams(topology, properties);
 
