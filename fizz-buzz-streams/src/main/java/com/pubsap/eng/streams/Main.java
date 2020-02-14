@@ -90,7 +90,7 @@ public class Main {
 
                                 case Fizz:
                                     result = new Output(
-                                            stringLongMap.getFizz(),
+                                            stringLongMap.getFizz() + 1,
                                             stringLongMap.getBuzz(),
                                             stringLongMap.getFizzBuzz()
                                     );
