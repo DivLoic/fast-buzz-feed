@@ -9,33 +9,29 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.streams.*;
 import org.apache.kafka.streams.kstream.TimeWindows;
 import io.confluent.kafka.schemaregistry.client.MockSchemaRegistryClient;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 
-import static junit.framework.TestCase.assertTrue;
 import static org.apache.kafka.common.utils.Utils.mkEntry;
 import static org.apache.kafka.common.utils.Utils.mkMap;
-import static org.hamcrest.core.IsEqual.equalTo;
-import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class FizzBuzzAllTopologySpec {
-
+public class FizzBuzzCompleteTopologyTest {
 
     private TopologyTestDriver testDriver;
     private TestInputTopic<InputKey, Input> inputTopic;
     private TestOutputTopic<OutputKey, Output> outputTopic;
+    final private static String srConfigKey = "schema.registry.url";
 
-    @Before
+    @BeforeEach
     public void setTopologyTestDriver() throws IOException, RestClientException {
-
-        final String srConfigKey = "schema.registry.url";
-
         final Config config = ConfigFactory.load();
         Properties properties = new Properties();
 
@@ -44,13 +40,11 @@ public class FizzBuzzAllTopologySpec {
         properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
         properties.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, 0);
 
-
         String inputTopicName = config.getString("input.topic.name");
         String outputTopicName = config.getString("output.topic.name");
 
         MockSchemaRegistryClient mockedRegistry = new MockSchemaRegistryClient();
-
-
+        
         SpecificAvroSerde<Item> itemSerde = new SpecificAvroSerde<>(mockedRegistry);
 
         SpecificAvroSerde<InputKey> inputKeySerde = new SpecificAvroSerde<>(mockedRegistry);
@@ -70,9 +64,9 @@ public class FizzBuzzAllTopologySpec {
 
         TimeWindows windows = TimeWindows
 
-                .of(Duration.ofSeconds(20))
+                .of(config.getDuration("window.size"))
 
-                .advanceBy(Duration.ofSeconds(20));
+                .advanceBy(config.getDuration("window.step"));
 
         Topology topology = Main.buildTopology(
                 config,
@@ -88,25 +82,22 @@ public class FizzBuzzAllTopologySpec {
 
         inputTopic = testDriver.createInputTopic(inputTopicName, inputKeySerde.serializer(), inputSerde.serializer());
         outputTopic = testDriver.createOutputTopic(outputTopicName, outputKeySerde.deserializer(), outputSerde.deserializer());
-
     }
 
-    @After
-    public void closeTestDriver(){
+    @AfterEach
+    public void tearDown(){
         testDriver.close();
     }
 
     @Test
-    public void allTopologyTestSamePlayerSameWindow() {
-
-        //Given
+    public void topologyShouldGroupEvents() {
         final List<KeyValue<InputKey,Input>> inputValues = Arrays.asList(
-                new KeyValue<>(new InputKey("player-1"),new Input(3,Instant.parse("2020-02-14T14:26:00Z"))),
-                new KeyValue<>(new InputKey("player-1"),new Input(5,Instant.parse("2020-02-14T14:26:01Z"))),
-                new KeyValue<>(new InputKey("player-1"),new Input(15,Instant.parse("2020-02-14T14:26:02Z"))),
-                new KeyValue<>(new InputKey("player-1"),new Input(3,Instant.parse("2020-02-14T14:26:03Z"))),
-                new KeyValue<>(new InputKey("player-1"),new Input(5,Instant.parse("2020-02-14T14:26:04Z"))),
-                new KeyValue<>(new InputKey("player-1"),new Input(15,Instant.parse("2020-02-14T14:26:05Z")))
+                new KeyValue<>(new InputKey("client-1"),new Input(3,Instant.parse("2020-02-14T14:26:00Z"))),
+                new KeyValue<>(new InputKey("client-1"),new Input(5,Instant.parse("2020-02-14T14:26:01Z"))),
+                new KeyValue<>(new InputKey("client-1"),new Input(15,Instant.parse("2020-02-14T14:26:02Z"))),
+                new KeyValue<>(new InputKey("client-1"),new Input(3,Instant.parse("2020-02-14T14:26:03Z"))),
+                new KeyValue<>(new InputKey("client-1"),new Input(5,Instant.parse("2020-02-14T14:26:04Z"))),
+                new KeyValue<>(new InputKey("client-1"),new Input(15,Instant.parse("2020-02-14T14:26:05Z")))
         );
 
         //When
@@ -114,21 +105,20 @@ public class FizzBuzzAllTopologySpec {
 
         //Then
         final Map<OutputKey, Output> expectedWordCounts = mkMap(
-                mkEntry(new OutputKey("player-1","2020-02-14T14:26:00Z","2020-02-14T14:26:20Z"),new Output(2,2,2))
+                mkEntry(new OutputKey("client-1","2020-02-14T14:26:00Z","2020-02-14T14:26:20Z"),new Output(2,2,2))
         );
-        assertThat(outputTopic.readKeyValuesToMap(),equalTo(expectedWordCounts));
+        assertEquals(outputTopic.readKeyValuesToMap(),expectedWordCounts);
         assertTrue(outputTopic.isEmpty());
     }
 
     @Test
-    public void allTopologyTestDifferentPlayersSameWindow() {
-
+    public void topologyShouldGroupEventsFromSameClient() {
         //Given
         final List<KeyValue<InputKey,Input>> inputValues = Arrays.asList(
-                new KeyValue<>(new InputKey("player-1"),new Input(3,Instant.parse("2020-02-14T14:26:05Z"))),
-                new KeyValue<>(new InputKey("player-1"),new Input(3,Instant.parse("2020-02-14T14:26:05Z"))),
-                new KeyValue<>(new InputKey("player-2"),new Input(5,Instant.parse("2020-02-14T14:26:05Z"))),
-                new KeyValue<>(new InputKey("player-2"),new Input(5,Instant.parse("2020-02-14T14:26:05Z")))
+                new KeyValue<>(new InputKey("client-1"),new Input(3,Instant.parse("2020-02-14T14:26:05Z"))),
+                new KeyValue<>(new InputKey("client-1"),new Input(3,Instant.parse("2020-02-14T14:26:05Z"))),
+                new KeyValue<>(new InputKey("client-2"),new Input(5,Instant.parse("2020-02-14T14:26:05Z"))),
+                new KeyValue<>(new InputKey("client-2"),new Input(5,Instant.parse("2020-02-14T14:26:05Z")))
         );
 
         //When
@@ -136,22 +126,20 @@ public class FizzBuzzAllTopologySpec {
 
         //Then
         final Map<OutputKey, Output> expectedWordCounts = mkMap(
-                mkEntry(new OutputKey("player-2","2020-02-14T14:26:00Z","2020-02-14T14:26:20Z"),new Output(0,2,0)),
-                mkEntry(new OutputKey("player-1","2020-02-14T14:26:00Z","2020-02-14T14:26:20Z"),new Output(2,0,0))
+                mkEntry(new OutputKey("client-2","2020-02-14T14:26:00Z","2020-02-14T14:26:20Z"),new Output(0,2,0)),
+                mkEntry(new OutputKey("client-1","2020-02-14T14:26:00Z","2020-02-14T14:26:20Z"),new Output(2,0,0))
         );
-        assertThat(outputTopic.readKeyValuesToMap(),equalTo(expectedWordCounts));
+        assertEquals(outputTopic.readKeyValuesToMap(),expectedWordCounts);
         assertTrue(outputTopic.isEmpty());
     }
 
     @Test
-    public void allTopologyTestDifferentPlayersDifferentWindows() {
-
+    public void topologyShouldGroupEventsFromSameWindow() {
         //Given
         final List<KeyValue<InputKey,Input>> inputValues = Arrays.asList(
-                new KeyValue<>(new InputKey("player-1"),new Input(3,Instant.parse("2020-02-14T14:26:05Z"))),
-                new KeyValue<>(new InputKey("player-1"),new Input(3,Instant.parse("2020-02-14T14:26:05Z"))),
-                new KeyValue<>(new InputKey("player-2"),new Input(5,Instant.parse("2020-02-14T14:26:25Z"))),
-                new KeyValue<>(new InputKey("player-2"),new Input(5,Instant.parse("2020-02-14T14:26:25Z")))
+                new KeyValue<>(new InputKey("client-1"),new Input(3,Instant.parse("2020-02-14T14:26:05Z"))),
+                new KeyValue<>(new InputKey("client-1"),new Input(5,Instant.parse("2020-02-14T14:26:25Z"))),
+                new KeyValue<>(new InputKey("client-1"),new Input(15,Instant.parse("2020-02-14T14:26:45Z")))
         );
 
         //When
@@ -159,34 +147,11 @@ public class FizzBuzzAllTopologySpec {
 
         //Then
         final Map<OutputKey, Output> expectedWordCounts = mkMap(
-                mkEntry(new OutputKey("player-2","2020-02-14T14:26:20Z","2020-02-14T14:26:40Z"),new Output(0,2,0)),
-                mkEntry(new OutputKey("player-1","2020-02-14T14:26:00Z","2020-02-14T14:26:20Z"),new Output(2,0,0))
+                mkEntry(new OutputKey("client-1","2020-02-14T14:26:00Z","2020-02-14T14:26:20Z"),new Output(1,0,0)),
+                mkEntry(new OutputKey("client-1","2020-02-14T14:26:20Z","2020-02-14T14:26:40Z"),new Output(0,1,0)),
+                mkEntry(new OutputKey("client-1","2020-02-14T14:26:40Z","2020-02-14T14:27:00Z"),new Output(0,0,1))
         );
-        assertThat(outputTopic.readKeyValuesToMap(),equalTo(expectedWordCounts));
+        assertEquals(outputTopic.readKeyValuesToMap(),expectedWordCounts);
         assertTrue(outputTopic.isEmpty());
     }
-
-    @Test
-    public void allTopologyTestSamePlayerDifferentWindows() {
-
-        //Given
-        final List<KeyValue<InputKey,Input>> inputValues = Arrays.asList(
-                new KeyValue<>(new InputKey("player-1"),new Input(3,Instant.parse("2020-02-14T14:26:05Z"))),
-                new KeyValue<>(new InputKey("player-1"),new Input(5,Instant.parse("2020-02-14T14:26:25Z"))),
-                new KeyValue<>(new InputKey("player-1"),new Input(15,Instant.parse("2020-02-14T14:26:45Z")))
-        );
-
-        //When
-        inputTopic.pipeKeyValueList(inputValues);
-
-        //Then
-        final Map<OutputKey, Output> expectedWordCounts = mkMap(
-                mkEntry(new OutputKey("player-1","2020-02-14T14:26:00Z","2020-02-14T14:26:20Z"),new Output(1,0,0)),
-                mkEntry(new OutputKey("player-1","2020-02-14T14:26:20Z","2020-02-14T14:26:40Z"),new Output(0,1,0)),
-                mkEntry(new OutputKey("player-1","2020-02-14T14:26:40Z","2020-02-14T14:27:00Z"),new Output(0,0,1))
-        );
-        assertThat(outputTopic.readKeyValuesToMap(),equalTo(expectedWordCounts));
-        assertTrue(outputTopic.isEmpty());
-    }
-
 }
