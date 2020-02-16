@@ -11,10 +11,6 @@
 
     <artifactId>fizz-buzz-streams</artifactId>
 
-    <properties>
-        <it.only />
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
