@@ -1,8 +1,8 @@
 terraform {
   backend "gcs" {
-    bucket = "edml"
+    bucket = "fizzbuzz-streams-dev"
     prefix = "/metadata"
-    credentials = ".terraform/edml-gcp-access-key.json"
+    credentials = ".terraform/gcp-service-account-key.json"
   }
 }
 

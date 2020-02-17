@@ -23,8 +23,6 @@ jobs:
 
       - name: Maven Unit Tests
         run: ./mvnw -B test
-        # delete this after once the CI is properly set up
-        continue-on-error: true
 
       - name: Maven It Tests
         run: ./mvnw -B integration-test -Dit.only
