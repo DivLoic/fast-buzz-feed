@@ -1,0 +1,37 @@
+name: Pull Request Workflow
+
+on:
+  pull_request:
+    branches:
+      - 'master'
+
+jobs:
+  pull-request:
+    name: Pull Request Workflow Job
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+
+      - name: Checkout Fizz Buzz Streaming App
+        uses: actions/checkout@v1
+
+      - name: Prepare Git Operations
+        run: |
+          export REMOTE_REPO=${{ github.actor }}/fast-fizz-buzz
+          git config --global user.name Github Action
+          git config --global user.email octocat@github.com
+          git remote add contrib https://github.com/${REMOTE_REPO}.git
+          git fetch contrib
+
+      - name: Merge branch contrib / ${{ github.head_ref }}
+        run: git merge contrib/${{ github.head_ref }}
+
+      - name: Maven Unit Tests
+        run: ./mvnw -B test
+
+      - name: Maven It Tests
+        run: ./mvnw -B integration-test -Dit.only

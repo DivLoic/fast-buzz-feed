@@ -17,7 +17,7 @@ export B64_SR_SECRET_KEY=$(base64 <(echo ${SR_SECRET_KEY}))
 export B64_BOOTSTRAP_SERVERS=$(base64 <(echo ${BOOTSTRAP_SERVERS}))
 export B64_SCHEMA_REGISTRY_URL=$(base64 <(echo ${SCHEMA_REGISTRY_URL}))
 
-envsubst > $(dirname "$0")/.secrets/staging.yaml <<- "EOF"
+envsubst > $(dirname "$0")/.secrets/${ENV}.yaml <<- "EOF"
 ---
 apiVersion: v1
 kind: Secret

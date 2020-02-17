@@ -10,8 +10,6 @@ import org.testcontainers.containers.wait.strategy.Wait;
 
 import java.io.File;
 
-import static org.junit.Assert.fail;
-
 /**
  * Created by loicmdivad.
  */
@@ -35,6 +33,6 @@ public class BaseCaseIt {
 
     @Test
     public void applicationShouldDoSomething() {
-        fail("Testing the proper execution of integration tests!");
+        // Do something!
     }
 }
