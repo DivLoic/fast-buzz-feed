@@ -41,7 +41,7 @@ public class FizzBuzzAggregator {
                 );
                 break;
             default:
-                result = new Output(0, 0, 0);
+                result = stringLongMap;
         }
         return result;
     };

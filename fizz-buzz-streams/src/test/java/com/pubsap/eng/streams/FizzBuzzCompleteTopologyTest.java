@@ -17,17 +17,16 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.*;
 
+import static io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG;
 import static org.apache.kafka.common.utils.Utils.mkEntry;
 import static org.apache.kafka.common.utils.Utils.mkMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class FizzBuzzCompleteTopologyTest {
 
     private TopologyTestDriver testDriver;
     private TestInputTopic<InputKey, Input> inputTopic;
     private TestOutputTopic<OutputKey, Output> outputTopic;
-    final private static String srConfigKey = "schema.registry.url";
 
     @BeforeEach
     public void setTopologyTestDriver() throws IOException, RestClientException {
@@ -52,11 +51,16 @@ public class FizzBuzzCompleteTopologyTest {
         SpecificAvroSerde<OutputKey> outputKeySerde = new SpecificAvroSerde<>(mockedRegistry);
         SpecificAvroSerde<Output> outputSerde = new SpecificAvroSerde<>(mockedRegistry);
 
-        itemSerde.configure(Collections.singletonMap(srConfigKey, config.getString(srConfigKey)), false);
-        inputSerde.configure(Collections.singletonMap(srConfigKey, config.getString(srConfigKey)), false);
-        outputSerde.configure(Collections.singletonMap(srConfigKey, config.getString(srConfigKey)), false);
-        inputKeySerde.configure(Collections.singletonMap(srConfigKey, config.getString(srConfigKey)), true);
-        outputKeySerde.configure(Collections.singletonMap(srConfigKey, config.getString(srConfigKey)), true);
+        Map<String, Object> srConfigMap = Collections.singletonMap(
+                SCHEMA_REGISTRY_URL_CONFIG,
+                config.getString(SCHEMA_REGISTRY_URL_CONFIG)
+        );
+
+        itemSerde.configure(srConfigMap, false);
+        inputSerde.configure(srConfigMap, false);
+        outputSerde.configure(srConfigMap, false);
+        inputKeySerde.configure(srConfigMap, true);
+        outputKeySerde.configure(srConfigMap, true);
 
         mockedRegistry.register(inputTopic + "-value", Input.SCHEMA$);
         mockedRegistry.register(outputTopic + "-value", Output.SCHEMA$);
@@ -108,8 +112,8 @@ public class FizzBuzzCompleteTopologyTest {
         final Map<OutputKey, Output> expectedWordCounts = mkMap(
                 mkEntry(new OutputKey("client-1", "2020-02-14T14:26:00Z", "2020-02-14T14:26:20Z"), new Output(2, 2, 2))
         );
+
         assertEquals(outputTopic.readKeyValuesToMap(), expectedWordCounts);
-        assertTrue(outputTopic.isEmpty());
     }
 
     @Test
@@ -119,7 +123,8 @@ public class FizzBuzzCompleteTopologyTest {
                 new KeyValue<>(new InputKey("client-1"), new Input(3, Instant.parse("2020-02-14T14:26:05Z"))),
                 new KeyValue<>(new InputKey("client-1"), new Input(3, Instant.parse("2020-02-14T14:26:05Z"))),
                 new KeyValue<>(new InputKey("client-2"), new Input(5, Instant.parse("2020-02-14T14:26:05Z"))),
-                new KeyValue<>(new InputKey("client-2"), new Input(5, Instant.parse("2020-02-14T14:26:05Z")))
+                new KeyValue<>(new InputKey("client-2"), new Input(5, Instant.parse("2020-02-14T14:26:05Z"))),
+                new KeyValue<>(new InputKey("client-2"), new Input(8, Instant.parse("2020-02-14T14:26:05Z")))
         );
 
         //When
@@ -130,8 +135,8 @@ public class FizzBuzzCompleteTopologyTest {
                 mkEntry(new OutputKey("client-2", "2020-02-14T14:26:00Z", "2020-02-14T14:26:20Z"), new Output(0, 2, 0)),
                 mkEntry(new OutputKey("client-1", "2020-02-14T14:26:00Z", "2020-02-14T14:26:20Z"), new Output(2, 0, 0))
         );
+
         assertEquals(outputTopic.readKeyValuesToMap(), expectedWordCounts);
-        assertTrue(outputTopic.isEmpty());
     }
 
     @Test
@@ -154,6 +159,5 @@ public class FizzBuzzCompleteTopologyTest {
         );
 
         assertEquals(outputTopic.readKeyValuesToMap(), expectedWordCounts);
-        assertTrue(outputTopic.isEmpty());
     }
 }

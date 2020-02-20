@@ -8,11 +8,11 @@
         </encoder>
     </appender>
 
-    <logger name="com.pubsap.eng" level="DEBUG" additivity="false">
+    <logger name="com.pubsap.eng" level="INFO" additivity="false">
         <appender-ref ref="console" />
     </logger>
 
-    <logger name="io.confluent.developer" level="DEBUG" additivity="false">
+    <logger name="io.confluent.developer" level="WARN" additivity="false">
         <appender-ref ref="console" />
     </logger>
 

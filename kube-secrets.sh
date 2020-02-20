@@ -23,6 +23,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: ${ENV}-secretzz
+  namespace: ${ENV}-fizzbuzz
 data:
   api-key: ${B64_API_KEY}
   secret-key: ${B64_SECRET_KEY}
