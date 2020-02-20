@@ -3,6 +3,7 @@ package com.pubsap.eng.streams;
 import com.pubsap.eng.schema.*;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.Serde;
@@ -18,6 +19,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import static com.pubsap.eng.common.FizzUtils.mapFormConfig;
+import static io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG;
 
 /**
  * Created by loicmdivad.
@@ -65,8 +67,9 @@ public class Main {
                         FizzBuzzAggregator.aggregator,
                         Named.as("the-grouped-topic"),
                         Materialized.with(inputKeySerde, outputSerde)
+                )
 
-                ).toStream()
+                .toStream()
 
                 .map(FizzBuzzMapper.formatOutput)
 
@@ -76,7 +79,6 @@ public class Main {
     }
 
     public static void main(String[] args) {
-        final String srConfigKey = "schema.registry.url";
         final Config config = ConfigFactory.load();
 
         Properties properties = new Properties();
@@ -89,7 +91,7 @@ public class Main {
         properties.putAll(mapFormConfig(config.getConfig("kafka-client")));
 
         Map<String, Object> schemaRegistryConfigMap = mapFormConfig(config.getConfig("schema-client"));
-        schemaRegistryConfigMap.put(srConfigKey, config.getString(srConfigKey));
+        schemaRegistryConfigMap.put(SCHEMA_REGISTRY_URL_CONFIG, config.getString(SCHEMA_REGISTRY_URL_CONFIG));
 
         SpecificAvroSerde<Item> itemSerde = new SpecificAvroSerde<>();
         SpecificAvroSerde<Input> inputSerde = new SpecificAvroSerde<>();
