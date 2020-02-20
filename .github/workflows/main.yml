@@ -19,11 +19,14 @@ jobs:
       - name: Checkout Fizz Buzz Streaming App
         uses: actions/checkout@v1
 
+      - name: Checkout Fizz Buzz HEAD^
+        run: git checkout HEAD^
+
       - name: Maven Unit Tests
         run: ./mvnw -B test jacoco:report
 
       - name: Coveralls Test Coverage Report
-        run: ./mvnw -B coveralls:report -Dcoveralls.token=${{ secrets.COVERALLS_TOKEN }} -Dbranch=master
+        run: ./mvnw -B coveralls:report -Dcoveralls.token=${{ secrets.COVERALLS_TOKEN }}
 
       - name: Maven It Tests
         run: ./mvnw -B integration-test -Dit.only
