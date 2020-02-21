@@ -63,7 +63,9 @@ public class Main {
                         Named.as("the-grouped-topic"),
                         Materialized.with(inputKeySerde, outputSerde)
 
-                ).toStream()
+                )
+
+                .toStream()
 
                 .map(FizzBuzzMapper.formatOutput)
 
