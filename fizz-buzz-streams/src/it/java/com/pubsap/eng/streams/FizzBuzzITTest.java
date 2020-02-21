@@ -43,6 +43,8 @@ public class FizzBuzzITTest {
 
     static String inputTopicName;
     static String outputTopicName;
+    static String appID;
+    static String consumerGroupID;
     static Producer<InputKey, Input> producer;
     static Consumer<OutputKey, Output> consumer;
     static KafkaStreams streams;
@@ -53,7 +55,7 @@ public class FizzBuzzITTest {
 
     @ClassRule
     public static DockerComposeContainer environment =
-            new DockerComposeContainer(TestProvider.fileFromResource("docker-compose-it.yml"))//new File("docker-compose-it.yml"))
+            new DockerComposeContainer(TestProvider.fileFromResource("docker-compose-it.yml"))
                     .withExposedService("schema-registry", 8081, Wait.forHttp("/subjects").forStatusCode(200));
 
     @BeforeAll
@@ -68,6 +70,11 @@ public class FizzBuzzITTest {
 
         inputTopicName = config.getString("topic.input.name");
         outputTopicName = config.getString("topic.output.name");
+
+        appID = config.getString("application.id");
+
+        consumerGroupID = config.getString("consumer.group.id");
+
 
         SchemaRegistryClient client = new CachedSchemaRegistryClient(schemaRegistryURL, 20);
 
@@ -195,14 +202,13 @@ public class FizzBuzzITTest {
 
     public static Consumer<OutputKey, Output> configureAndCreateConsumer(){
 
-        String groupId = "fizz-buzz-it-tests-consumer";
         Properties consumerProps = new Properties();
         consumerProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, brokerURL);
         consumerProps.put(AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryURL);
         consumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, KafkaAvroDeserializer.class);
         consumerProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, KafkaAvroDeserializer.class);
         consumerProps.put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, true);
-        consumerProps.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
+        consumerProps.put(ConsumerConfig.GROUP_ID_CONFIG, consumerGroupID);
 
         return new KafkaConsumer<>(consumerProps);
     }
@@ -227,7 +233,7 @@ public class FizzBuzzITTest {
         streamsProps.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, 0);
         streamsProps.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, SpecificAvroSerde.class);
         streamsProps.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, SpecificAvroSerde.class);
-        streamsProps.put(StreamsConfig.APPLICATION_ID_CONFIG, "Fizz-Buzz-IT-Tests-"+System.currentTimeMillis());
+        streamsProps.put(StreamsConfig.APPLICATION_ID_CONFIG,appID+System.currentTimeMillis());
         streamsProps.put(AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryURL);
 
         return new KafkaStreams(topology, streamsProps);
