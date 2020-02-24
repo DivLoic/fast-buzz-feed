@@ -4,7 +4,6 @@ import com.pubsap.eng.schema.*;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import io.confluent.kafka.schemaregistry.client.MockSchemaRegistryClient;
-import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.streams.*;
@@ -14,10 +13,11 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.util.*;
 
+import static com.pubsap.eng.common.FizzUtils.mapFormConfig;
+import static io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -26,10 +26,9 @@ public class FizzBuzzPredicateTest {
     private TopologyTestDriver testDriver;
     private TestInputTopic<InputKey, Input> inputTopic;
     private TestOutputTopic<InputKey, Item> outputTopic;
-    final private static String srConfigKey = "schema.registry.url";
 
     @BeforeEach
-    public void setUp() throws IOException, RestClientException {
+    public void setUp() {
         final Config config = ConfigFactory.load();
         Properties properties = new Properties();
 
@@ -38,8 +37,13 @@ public class FizzBuzzPredicateTest {
         properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
         properties.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, 0);
 
-        String inputTopicName = config.getString("predicate.input.topic.name");
-        String outputTopicName = config.getString("predicate.output.topic.name");
+        properties.putAll(mapFormConfig(config.getConfig("kafka-client")));
+
+        Map<String, Object> schemaRegistryConfigMap = mapFormConfig(config.getConfig("schema-client"));
+        schemaRegistryConfigMap.put(SCHEMA_REGISTRY_URL_CONFIG, config.getString(SCHEMA_REGISTRY_URL_CONFIG));
+
+        String inputTopicName = "input-topic";
+        String outputTopicName = "output-topic";
 
         MockSchemaRegistryClient mockedRegistry = new MockSchemaRegistryClient();
 
@@ -49,14 +53,9 @@ public class FizzBuzzPredicateTest {
         SpecificAvroSerde<Input> inputSerde = new SpecificAvroSerde<>(mockedRegistry);
 
 
-        itemSerde.configure(Collections.singletonMap(srConfigKey, config.getString(srConfigKey)), false);
-        inputSerde.configure(Collections.singletonMap(srConfigKey, config.getString(srConfigKey)), false);
-        inputKeySerde.configure(Collections.singletonMap(srConfigKey, config.getString(srConfigKey)), true);
-
-        mockedRegistry.register(inputTopic + "-value", Input.SCHEMA$);
-        mockedRegistry.register(outputTopic + "-value", Item.SCHEMA$);
-
-
+        itemSerde.configure(schemaRegistryConfigMap, false);
+        inputSerde.configure(schemaRegistryConfigMap, false);
+        inputKeySerde.configure(schemaRegistryConfigMap, true);
 
         StreamsBuilder builder = new StreamsBuilder();
         Consumed<InputKey, Input> consumedInputs = Consumed
@@ -74,7 +73,7 @@ public class FizzBuzzPredicateTest {
 
                 .filterNot(FizzBuzzPredicate.isNoneItem)
 
-                .to(outputTopicName,producedCounts);
+                .to(outputTopicName, producedCounts);
 
 
         testDriver = new TopologyTestDriver(builder.build(), properties);
@@ -104,7 +103,7 @@ public class FizzBuzzPredicateTest {
         //Then
         final KeyValue<InputKey, Item> expectedResult = new KeyValue<>(new InputKey("client-1"), new Item(ItemValue.Buzz));
 
-        assertEquals(expectedResult,outputTopic.readKeyValue());
+        assertEquals(expectedResult, outputTopic.readKeyValue());
         assertTrue(outputTopic.isEmpty());
     }
 
@@ -121,7 +120,7 @@ public class FizzBuzzPredicateTest {
         //Then
         final KeyValue<InputKey, Item> expectedResult = new KeyValue<>(new InputKey("client-2"), new Item(ItemValue.Fizz));
 
-        assertEquals(expectedResult,outputTopic.readKeyValue());
+        assertEquals(expectedResult, outputTopic.readKeyValue());
         assertTrue(outputTopic.isEmpty());
     }
 
