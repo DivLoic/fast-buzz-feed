@@ -4,7 +4,6 @@ import com.pubsap.eng.schema.*;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import io.confluent.kafka.schemaregistry.client.MockSchemaRegistryClient;
-import io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException;
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.streams.*;
@@ -13,10 +12,10 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.time.Instant;
 import java.util.*;
 
+import static com.pubsap.eng.common.FizzUtils.mapFormConfig;
 import static io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG;
 import static org.apache.kafka.common.utils.Utils.mkEntry;
 import static org.apache.kafka.common.utils.Utils.mkMap;
@@ -29,7 +28,7 @@ public class FizzBuzzCompleteTopologyTest {
     private TestOutputTopic<OutputKey, Output> outputTopic;
 
     @BeforeEach
-    public void setTopologyTestDriver() throws IOException, RestClientException {
+    public void setTopologyTestDriver() {
         final Config config = ConfigFactory.load();
         Properties properties = new Properties();
 
@@ -38,32 +37,28 @@ public class FizzBuzzCompleteTopologyTest {
         properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
         properties.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, 0);
 
-        String inputTopicName = config.getString("input.topic.name");
-        String outputTopicName = config.getString("output.topic.name");
+        properties.putAll(mapFormConfig(config.getConfig("kafka-client")));
+
+        Map<String, Object> schemaRegistryConfigMap = mapFormConfig(config.getConfig("schema-client"));
+        schemaRegistryConfigMap.put(SCHEMA_REGISTRY_URL_CONFIG, config.getString(SCHEMA_REGISTRY_URL_CONFIG));
+
+        String inputTopicName = "fizz-buzz-input";
+        String outputTopicName = "fizz-buzz-output";
 
         MockSchemaRegistryClient mockedRegistry = new MockSchemaRegistryClient();
 
         SpecificAvroSerde<Item> itemSerde = new SpecificAvroSerde<>(mockedRegistry);
-
-        SpecificAvroSerde<InputKey> inputKeySerde = new SpecificAvroSerde<>(mockedRegistry);
         SpecificAvroSerde<Input> inputSerde = new SpecificAvroSerde<>(mockedRegistry);
-
+        SpecificAvroSerde<InputKey> inputKeySerde = new SpecificAvroSerde<>(mockedRegistry);
         SpecificAvroSerde<OutputKey> outputKeySerde = new SpecificAvroSerde<>(mockedRegistry);
         SpecificAvroSerde<Output> outputSerde = new SpecificAvroSerde<>(mockedRegistry);
 
-        Map<String, Object> srConfigMap = Collections.singletonMap(
-                SCHEMA_REGISTRY_URL_CONFIG,
-                config.getString(SCHEMA_REGISTRY_URL_CONFIG)
-        );
+        itemSerde.configure(schemaRegistryConfigMap, false);
+        inputSerde.configure(schemaRegistryConfigMap, false);
+        outputSerde.configure(schemaRegistryConfigMap, false);
+        inputKeySerde.configure(schemaRegistryConfigMap, true);
+        outputKeySerde.configure(schemaRegistryConfigMap, true);
 
-        itemSerde.configure(srConfigMap, false);
-        inputSerde.configure(srConfigMap, false);
-        outputSerde.configure(srConfigMap, false);
-        inputKeySerde.configure(srConfigMap, true);
-        outputKeySerde.configure(srConfigMap, true);
-
-        mockedRegistry.register(inputTopic + "-value", Input.SCHEMA$);
-        mockedRegistry.register(outputTopic + "-value", Output.SCHEMA$);
 
         TimeWindows windows = TimeWindows
 
