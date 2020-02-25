@@ -48,10 +48,8 @@ public class FizzBuzzPredicateTest {
         MockSchemaRegistryClient mockedRegistry = new MockSchemaRegistryClient();
 
         SpecificAvroSerde<Item> itemSerde = new SpecificAvroSerde<>(mockedRegistry);
-
         SpecificAvroSerde<InputKey> inputKeySerde = new SpecificAvroSerde<>(mockedRegistry);
         SpecificAvroSerde<Input> inputSerde = new SpecificAvroSerde<>(mockedRegistry);
-
 
         itemSerde.configure(schemaRegistryConfigMap, false);
         inputSerde.configure(schemaRegistryConfigMap, false);
@@ -59,7 +57,6 @@ public class FizzBuzzPredicateTest {
 
         StreamsBuilder builder = new StreamsBuilder();
         Consumed<InputKey, Input> consumedInputs = Consumed
-
                 .with(inputKeySerde, inputSerde)
                 .withTimestampExtractor(new InputTimestampExtractor());
 
@@ -75,7 +72,6 @@ public class FizzBuzzPredicateTest {
 
                 .to(outputTopicName, producedCounts);
 
-
         testDriver = new TopologyTestDriver(builder.build(), properties);
 
         inputTopic = testDriver
@@ -88,7 +84,6 @@ public class FizzBuzzPredicateTest {
     public void tearDown() {
         testDriver.close();
     }
-
 
     @Test
     public void predicateShouldFilterNoneKeys() {
@@ -123,5 +118,4 @@ public class FizzBuzzPredicateTest {
         assertEquals(expectedResult, outputTopic.readKeyValue());
         assertTrue(outputTopic.isEmpty());
     }
-
 }
