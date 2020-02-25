@@ -19,7 +19,6 @@ import static com.pubsap.eng.common.FizzUtils.mapFormConfig;
 import static io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-
 public class FizzBuzzMapperTest {
     private static TopologyTestDriver testDriver;
     private static TestInputTopic<InputKey, Input> inputTopic;
@@ -29,8 +28,8 @@ public class FizzBuzzMapperTest {
     public static void setUp() {
 
         final Config config = ConfigFactory.load();
-
         Properties properties = new Properties();
+
         properties.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, config.getString("bootstrap.servers"));
         properties.put(StreamsConfig.APPLICATION_ID_CONFIG, config.getString("application.id"));
         properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
@@ -54,11 +53,9 @@ public class FizzBuzzMapperTest {
         inputKeySerde.configure(schemaRegistryConfigMap, true);
         inputSerde.configure(schemaRegistryConfigMap, true);
 
-
         Consumed<InputKey, Input> consumedInputs = Consumed
                 .with(inputKeySerde, inputSerde)
                 .withTimestampExtractor(new InputTimestampExtractor());
-
 
         Produced<InputKey, Item> producedCounts = Produced.with(inputKeySerde, itemSerde);
 
