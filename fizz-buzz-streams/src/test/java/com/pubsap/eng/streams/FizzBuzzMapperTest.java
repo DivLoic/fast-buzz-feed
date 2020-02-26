@@ -15,7 +15,6 @@ import org.junit.jupiter.api.Test;
 import java.time.Instant;
 import java.util.*;
 
-import static com.pubsap.eng.common.FizzUtils.mapFormConfig;
 import static io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -35,10 +34,9 @@ public class FizzBuzzMapperTest {
         properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
         properties.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, 0);
 
-        properties.putAll(mapFormConfig(config.getConfig("kafka-client")));
 
-        Map<String, Object> schemaRegistryConfigMap = mapFormConfig(config.getConfig("schema-client"));
-        schemaRegistryConfigMap.put(SCHEMA_REGISTRY_URL_CONFIG, config.getString(SCHEMA_REGISTRY_URL_CONFIG));
+        Map<String, Object> schemaRegistryConfigMap =
+                Collections.singletonMap(SCHEMA_REGISTRY_URL_CONFIG, "http://unused:8081");
 
         String inputTopicName = "input-topic";
         String outputTopicName = "output-topic";
