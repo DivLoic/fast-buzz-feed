@@ -1,8 +1,8 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: fizz-buzz-deployment
-  namespace: staging-fizzbuzz
+  name: fizz-buzz-${ENV}-deployment
+  namespace: ${ENV}-fizzbuzz
   labels:
     app: fizz-buzz-app
 spec:
@@ -15,45 +15,50 @@ spec:
         app: fizz-buzz-streams
     spec:
       containers:
-        - name: fizz-buzz
-          image: gcr.io/loicmdivad-pse2020/fast-fizz-buzz:latest
+        - name: fizz-buzz-${ENV}-container
+          image: gcr.io/loicmdivad-pse2020/fizz-buzz-streams:latest
           env:
             - name: APPLICATION_ID
               value: STAGING-FIZZBUZZ-APP
+            - name: INPUT_TOPIC_NAME
+              value: input-event-${ENV}
+            - name: OUTPUT_TOPIC_NAME
+              value: output-event-${ENV}
+
             - name: API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: staging-secretzz
+                  name: ${ENV}-secretzz
                   key: api-key
             - name: SECRET_KEY
               valueFrom:
                 secretKeyRef:
-                  name: staging-secretzz
+                  name: ${ENV}-secretzz
                   key: secret-key
             - name: BOOTSTRAP_SERVERS
               valueFrom:
                 secretKeyRef:
-                  name: staging-secretzz
+                  name: ${ENV}-secretzz
                   key: bootstrap-servers
             - name: SR_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: staging-secretzz
+                  name: ${ENV}-secretzz
                   key: sr-api-key
             - name: SR_SECRET_KEY
               valueFrom:
                 secretKeyRef:
-                  name: staging-secretzz
+                  name: ${ENV}-secretzz
                   key: sr-secret-key
             - name: SCHEMA_REGISTRY_URL
               valueFrom:
                 secretKeyRef:
-                  name: staging-secretzz
+                  name: ${ENV}-secretzz
                   key: schema-registry-url
             - name: SASL_CLASS
               valueFrom:
                 secretKeyRef:
-                  name: staging-secretzz
+                  name: ${ENV}-secretzz
                   key: sasl-class
             - name: ROOT_LOG_LVL
               value: INFO

@@ -42,6 +42,7 @@
         <maven-jacoco-plugin.version>0.8.5</maven-jacoco-plugin.version>
         <maven-coveralls-plugin.version>4.3.0</maven-coveralls-plugin.version>
         <junit-surefire-provider.version>1.3.2</junit-surefire-provider.version>
+        <maven-jib-plugin.version>2.0.0</maven-jib-plugin.version>
 
         <!-- user props -->
         <coveralls.token/>
