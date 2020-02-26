@@ -1,0 +1,74 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: default
+  labels:
+    app: grafana
+spec:
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+        - name: grafana
+          image: grafana/grafana:latest
+          readinessProbe:
+            httpGet:
+              path: /login
+              port: 3000
+          ports:
+            - name: grafana-port
+              containerPort: 3000
+          volumeMounts:
+            - name: dashboards-volume
+              mountPath: /etc/grafana/dashboards/
+            - name: provisioning-dashboards-volume
+              mountPath: /etc/grafana/provisioning/dashboards/
+            - name: provisioning-datasources-volume
+              mountPath: /etc/grafana/provisioning/datasources/
+
+      volumes:
+        - name: dashboards-volume
+          configMap:
+            name: grafana-dashboards
+        - name: provisioning-dashboards-volume
+          configMap:
+            name: grafana-provisioning-dashboards
+        - name: provisioning-datasources-volume
+          configMap:
+            name: grafana-provisioning-datasources
+---
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: grafana
+  labels:
+    app: grafana
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: grafana-ip
+spec:
+  backend:
+    servicePort: 80
+    serviceName: grafana-service
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-service
+  namespace: default
+  labels:
+    app: grafana
+spec:
+  type: NodePort
+  ports:
+    - port: 80
+      targetPort: 3000
+  selector:
+    app: grafana
