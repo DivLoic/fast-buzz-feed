@@ -9,13 +9,13 @@
 [[ -z "${BOOTSTRAP_SERVERS}" ]] && { echo "BOOTSTRAP_SERVERS was empty"; exit 1; }
 [[ -z "${SCHEMA_REGISTRY_URL}" ]] && { echo "SCHEMA_REGISTRY_URL was empty"; exit 1; }
 
-export B64_API_KEY=$(base64 <(echo ${API_KEY}))
-export B64_SECRET_KEY=$(base64 <(echo ${SECRET_KEY}))
-export B64_SASL_CLASS=$(base64 <(echo ${SASL_CLASS}))
-export B64_SR_API_KEY=$(base64 <(echo ${SR_API_KEY}))
-export B64_SR_SECRET_KEY=$(base64 <(echo ${SR_SECRET_KEY}))
-export B64_BOOTSTRAP_SERVERS=$(base64 <(echo ${BOOTSTRAP_SERVERS}))
-export B64_SCHEMA_REGISTRY_URL=$(base64 <(echo ${SCHEMA_REGISTRY_URL}))
+export B64_API_KEY=$(base64 <(echo ${API_KEY} | tr -d \\n))
+export B64_SECRET_KEY=$(base64 <(echo ${SECRET_KEY} | tr -d \\n))
+export B64_SASL_CLASS=$(base64 <(echo ${SASL_CLASS} | tr -d \\n))
+export B64_SR_API_KEY=$(base64 <(echo ${SR_API_KEY} | tr -d \\n))
+export B64_SR_SECRET_KEY=$(base64 <(echo ${SR_SECRET_KEY} | tr -d \\n))
+export B64_BOOTSTRAP_SERVERS=$(base64 <(echo ${BOOTSTRAP_SERVERS} | tr -d \\n))
+export B64_SCHEMA_REGISTRY_URL=$(base64 <(echo ${SCHEMA_REGISTRY_URL} | tr -d \\n))
 
 envsubst > $(dirname "$0")/.secrets/${ENV}.yaml <<- "EOF"
 ---

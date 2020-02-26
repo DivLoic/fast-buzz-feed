@@ -11,6 +11,11 @@
 
     <artifactId>fizz-buzz-streams</artifactId>
 
+    <properties>
+        <docker.image.repo>gcr.io/loicmdivad-pse2020</docker.image.repo>
+        <docker.image.name>fizz-buzz-streams</docker.image.name>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -216,10 +221,14 @@
             <plugin>
                 <groupId>com.google.cloud.tools</groupId>
                 <artifactId>jib-maven-plugin</artifactId>
-                <version>2.0.0</version>
+                <version>${maven-jib-plugin.version}</version>
                 <configuration>
                     <to>
-                        <image>gcr.io/loicmdivad-pse2020/fast-fizz-buzz</image>
+                        <image>${docker.image.repo}/${docker.image.name}</image>
+                        <tags>
+                            <tag>latest</tag>
+                            <tag>${project.version}</tag>
+                        </tags>
                     </to>
                 </configuration>
             </plugin>

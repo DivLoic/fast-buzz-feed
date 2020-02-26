@@ -14,7 +14,8 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 import java.util.Properties;
 
-import static com.pubsap.eng.common.FizzUtils.mapFormConfig;
+import static com.pubsap.eng.common.FizzUtils.mapFromConfig;
+import static io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG;
 
 /**
  * Created by loicmdivad.
@@ -75,7 +76,6 @@ public class Main {
     }
 
     public static void main(String[] args) {
-        final String srConfigKey = "schema.registry.url";
         final Config config = ConfigFactory.load();
 
         Properties properties = new Properties();
@@ -85,10 +85,10 @@ public class Main {
         properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, config.getString("reset.offset"));
         properties.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, 0);
 
-        properties.putAll(mapFormConfig(config.getConfig("kafka-client")));
+        properties.putAll(mapFromConfig(config.getConfig("confluent-cloud-client")));
 
-        Map<String, Object> schemaRegistryConfigMap = mapFormConfig(config.getConfig("schema-client"));
-        schemaRegistryConfigMap.put(srConfigKey, config.getString(srConfigKey));
+        Map<String, Object> schemaRegistryConfigMap = mapFromConfig(config.getConfig("schema-registry-client"));
+        schemaRegistryConfigMap.put(SCHEMA_REGISTRY_URL_CONFIG, config.getString(SCHEMA_REGISTRY_URL_CONFIG));
 
         SpecificAvroSerde<Item> itemSerde = new SpecificAvroSerde<>();
         SpecificAvroSerde<Input> inputSerde = new SpecificAvroSerde<>();
