@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.*;
 
-import static com.pubsap.eng.common.FizzUtils.mapFormConfig;
+import static com.pubsap.eng.common.FizzUtils.mapFromConfig;
 import static io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -37,9 +37,9 @@ public class FizzBuzzAggregatorTest {
         properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
         properties.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, 0);
 
-        properties.putAll(mapFormConfig(config.getConfig("kafka-client")));
+        properties.putAll(mapFromConfig(config.getConfig("confluent-cloud-client")));
 
-        Map<String, Object> schemaRegistryConfigMap = mapFormConfig(config.getConfig("schema-client"));
+        Map<String, Object> schemaRegistryConfigMap = mapFromConfig(config.getConfig("schema-registry-client"));
         schemaRegistryConfigMap.put(SCHEMA_REGISTRY_URL_CONFIG, config.getString(SCHEMA_REGISTRY_URL_CONFIG));
 
         String inputTopicName = "input-topic";

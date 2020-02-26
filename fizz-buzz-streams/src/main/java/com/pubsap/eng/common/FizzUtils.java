@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
  */
 public class FizzUtils {
 
-    public static Map<String, Object> mapFormConfig(Config config) {
+    public static Map<String, Object> mapFromConfig(Config config) {
 
         return config
                 .entrySet()
@@ -19,6 +19,5 @@ public class FizzUtils {
                         Map.Entry::getKey,
                         pair -> config.getAnyRef(pair.getKey()))
                 );
-
     }
 }
