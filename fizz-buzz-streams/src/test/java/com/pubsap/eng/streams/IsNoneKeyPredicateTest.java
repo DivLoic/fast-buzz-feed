@@ -77,9 +77,9 @@ public class IsNoneKeyPredicateTest {
     public void predicateShouldFilterNoneKeys() {
         //Given
         final List<KeyValue<InputKey, Input>> inputValues = Arrays.asList(
-                new KeyValue<>(null, new Input(3, Instant.parse("2020-02-04T14:26:00Z"))),
-                new KeyValue<>(new InputKey("None"), new Input(3, Instant.parse("2020-02-14T14:26:00Z"))),
-                new KeyValue<>(new InputKey("client-1"), new Input(5, Instant.parse("2020-02-24T14:26:01Z")))
+                new KeyValue<>(null, new Input(3, Instant.now())),
+                new KeyValue<>(new InputKey("None"), new Input(3, Instant.now())),
+                new KeyValue<>(new InputKey("client-1"), new Input(5, Instant.now()))
         );
 
         //When

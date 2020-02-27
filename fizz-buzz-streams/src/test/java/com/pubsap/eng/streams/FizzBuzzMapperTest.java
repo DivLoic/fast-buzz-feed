@@ -1,13 +1,15 @@
 package com.pubsap.eng.streams;
-import com.pubsap.eng.schema.*;
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
+import com.pubsap.eng.schema.Input;
+import com.pubsap.eng.schema.InputKey;
+import com.pubsap.eng.schema.Item;
+import com.pubsap.eng.schema.ItemValue;
 import io.confluent.kafka.schemaregistry.client.MockSchemaRegistryClient;
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.streams.*;
-import org.apache.kafka.streams.kstream.*;
+import org.apache.kafka.streams.kstream.Consumed;
+import org.apache.kafka.streams.kstream.Produced;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -25,12 +27,10 @@ public class FizzBuzzMapperTest {
 
     @BeforeAll
     public static void setUp() {
-
-        final Config config = ConfigFactory.load();
         Properties properties = new Properties();
 
-        properties.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, config.getString("bootstrap.servers"));
-        properties.put(StreamsConfig.APPLICATION_ID_CONFIG, config.getString("application.id"));
+        properties.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "unused:9092");
+        properties.put(StreamsConfig.APPLICATION_ID_CONFIG, "LOCAL-FBZZ-APP");
         properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
         properties.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, 0);
 
@@ -51,22 +51,24 @@ public class FizzBuzzMapperTest {
         inputKeySerde.configure(schemaRegistryConfigMap, true);
         inputSerde.configure(schemaRegistryConfigMap, true);
 
-        Consumed<InputKey, Input> consumedInputs = Consumed
-                .with(inputKeySerde, inputSerde)
-                .withTimestampExtractor(new InputTimestampExtractor());
+        Consumed<InputKey, Input> consumedInputs = Consumed.with(inputKeySerde, inputSerde);
 
         Produced<InputKey, Item> producedCounts = Produced.with(inputKeySerde, itemSerde);
 
         StreamsBuilder builder = new StreamsBuilder();
 
         builder.stream(inputTopicName, consumedInputs)
+
                 .mapValues(FizzBuzzMapper.parseItem)
+
                 .to(outputTopicName, producedCounts);
 
         testDriver = new TopologyTestDriver(builder.build(), properties);
 
-        inputTopic = testDriver.createInputTopic(inputTopicName, inputKeySerde.serializer(), inputSerde.serializer());
-        outputTopic = testDriver.createOutputTopic(outputTopicName, inputKeySerde.deserializer(), itemSerde.deserializer());
+        inputTopic = testDriver
+                .createInputTopic(inputTopicName, inputKeySerde.serializer(), inputSerde.serializer());
+        outputTopic = testDriver
+                .createOutputTopic(outputTopicName, inputKeySerde.deserializer(), itemSerde.deserializer());
     }
 
     @AfterAll
@@ -76,12 +78,12 @@ public class FizzBuzzMapperTest {
 
     @Test
     public void mapperShouldExtractItemFromInputValue() {
-
-        final List<KeyValue<InputKey,Input>> inputValues = Arrays.asList(
-                new KeyValue<>(new InputKey("client-1"),new Input(1,Instant.parse("2020-02-14T14:26:00Z"))),
-                new KeyValue<>(new InputKey("client-1"),new Input(3,Instant.parse("2020-02-14T14:26:01Z"))),
-                new KeyValue<>(new InputKey("client-1"),new Input(5,Instant.parse("2020-02-14T14:26:02Z"))),
-                new KeyValue<>(new InputKey("client-1"),new Input(15,Instant.parse("2020-02-14T14:26:03Z")))
+        // Given
+        final List<KeyValue<InputKey, Input>> inputValues = Arrays.asList(
+                new KeyValue<>(new InputKey("client-1"), new Input(1, Instant.now())),
+                new KeyValue<>(new InputKey("client-1"), new Input(3, Instant.now())),
+                new KeyValue<>(new InputKey("client-1"), new Input(5, Instant.now())),
+                new KeyValue<>(new InputKey("client-1"), new Input(15, Instant.now()))
         );
 
         //When
@@ -89,11 +91,12 @@ public class FizzBuzzMapperTest {
 
         //Then
         final List<KeyValue<InputKey, Item>> expectedResult = Arrays.asList(
-                new KeyValue<>(new InputKey("client-1"),new Item(ItemValue.None)),
-                new KeyValue<>(new InputKey("client-1"),new Item(ItemValue.Fizz)),
-                new KeyValue<>(new InputKey("client-1"),new Item(ItemValue.Buzz)),
-                new KeyValue<>(new InputKey("client-1"),new Item(ItemValue.FizzBuzz))
+                new KeyValue<>(new InputKey("client-1"), new Item(ItemValue.None)),
+                new KeyValue<>(new InputKey("client-1"), new Item(ItemValue.Fizz)),
+                new KeyValue<>(new InputKey("client-1"), new Item(ItemValue.Buzz)),
+                new KeyValue<>(new InputKey("client-1"), new Item(ItemValue.FizzBuzz))
         );
-        assertEquals(expectedResult,outputTopic.readKeyValuesToList());
+
+        assertEquals(expectedResult, outputTopic.readKeyValuesToList());
     }
 }
