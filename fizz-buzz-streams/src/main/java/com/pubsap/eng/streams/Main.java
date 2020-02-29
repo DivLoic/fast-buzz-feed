@@ -49,18 +49,18 @@ public class Main {
 
         Produced<OutputKey, Output> producedCounts = Produced.with(outputKeySerde, outputSerde);
 
-        Grouped<InputKey, Item> groupedItem = Grouped.with(inputKeySerde, itemSerde).withName("grouped-item");
+        Grouped<InputKey, Item> groupedItem = Grouped.with(inputKeySerde, itemSerde).withName("grouped-items");
 
         Materialized<InputKey, Output, WindowStore<Bytes, byte[]>> materializedItem =
                 Materialized.as(String.format("%s-aggregation", config.getString("application.id").toLowerCase()));
 
         builder.stream(inputTopic, consumedInputs)
 
-                .filterNot(FizzBuzzPredicate.isNoneKey)
+                .filterNot(FizzBuzzPredicate.isNoneKey, Named.as("filter-nullkeys-processor"))
 
-                .mapValues(FizzBuzzMapper.parseItem)
+                .mapValues(FizzBuzzMapper.parseItem, Named.as("mapper-item-processor"))
 
-                .filterNot(FizzBuzzPredicate.isNoneItem)
+                .filterNot(FizzBuzzPredicate.isNoneItem, Named.as("filter-none-processor"))
 
                 .groupByKey(groupedItem)
 
@@ -72,14 +72,14 @@ public class Main {
 
                         FizzBuzzAggregator.aggregator,
 
-                        Named.as("the-grouped-topic"),
+                        Named.as("aggregate-processor"),
 
                         materializedItem.withKeySerde(inputKeySerde).withValueSerde(outputSerde)
                 )
 
-                .toStream()
+                .toStream(Named.as("tostream-processor"))
 
-                .map(FizzBuzzMapper.formatOutput)
+                .map(FizzBuzzMapper.formatOutput, Named.as("mapper-keyformat-processor"))
 
                 .to(outputTopic, producedCounts);
 
