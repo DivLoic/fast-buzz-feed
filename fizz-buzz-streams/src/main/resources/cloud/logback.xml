@@ -6,7 +6,7 @@
         </encoder>
     </appender>
 
-    <logger name="com.pubsap.eng" level="INFO" additivity="false">
+    <logger name="com.pubsap.eng" level="${FBZZ_LOG_LVL:-INFO}" additivity="false">
         <appender-ref ref="console" />
     </logger>
 

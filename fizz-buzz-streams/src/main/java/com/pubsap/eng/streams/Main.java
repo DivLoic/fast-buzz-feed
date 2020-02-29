@@ -6,8 +6,13 @@ import com.typesafe.config.ConfigFactory;
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.Serde;
-import org.apache.kafka.streams.*;
+import org.apache.kafka.common.utils.Bytes;
+import org.apache.kafka.streams.KafkaStreams;
+import org.apache.kafka.streams.StreamsBuilder;
+import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.*;
+import org.apache.kafka.streams.state.WindowStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +51,9 @@ public class Main {
 
         Grouped<InputKey, Item> groupedItem = Grouped.with(inputKeySerde, itemSerde).withName("grouped-item");
 
+        Materialized<InputKey, Output, WindowStore<Bytes, byte[]>> materializedItem =
+                Materialized.as(String.format("%s-aggregation", config.getString("application.id").toLowerCase()));
+
         builder.stream(inputTopic, consumedInputs)
 
                 .filterNot(FizzBuzzPredicate.isNoneKey)
@@ -59,11 +67,14 @@ public class Main {
                 .windowedBy(timeWindow)
 
                 .aggregate(
-                        FizzBuzzAggregator.init,
-                        FizzBuzzAggregator.aggregator,
-                        Named.as("the-grouped-topic"),
-                        Materialized.with(inputKeySerde, outputSerde)
 
+                        FizzBuzzAggregator.init,
+
+                        FizzBuzzAggregator.aggregator,
+
+                        Named.as("the-grouped-topic"),
+
+                        materializedItem.withKeySerde(inputKeySerde).withValueSerde(outputSerde)
                 )
 
                 .toStream()
@@ -125,6 +136,7 @@ public class Main {
         Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
 
         streams.cleanUp();
+
         streams.start();
     }
 }
