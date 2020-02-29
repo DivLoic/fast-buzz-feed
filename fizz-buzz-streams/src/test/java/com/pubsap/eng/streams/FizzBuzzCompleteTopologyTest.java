@@ -66,7 +66,7 @@ public class FizzBuzzCompleteTopologyTest {
 
                 .advanceBy(config.getDuration("window.step"));
 
-        Topology topology = Main.buildTopology(
+        Topology topology = FizzBuzzTopology.buildTopology(
                 config,
                 windows,
                 itemSerde,

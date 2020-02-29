@@ -67,6 +67,9 @@
                     <includes>
                         <include>com/pubsap/eng/streams/*</include>
                     </includes>
+                    <excludes>
+                        <exclude>com/pubsap/eng/streams/Main.*</exclude>
+                    </excludes>
                 </configuration>
                 <executions>
                     <execution>

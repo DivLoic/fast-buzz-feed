@@ -22,6 +22,10 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG;
+import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
+import static org.hamcrest.core.Every.everyItem;
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -162,7 +166,6 @@ public class FizzBuzzAggregatorTest {
         assertEquals(Output.newBuilder().setFizz(1).setBuzz(2).setFizzBuzz(1).build(), result3);
 
         assertTrue(resultIt.isEmpty());
-        assertTrue(outputTopic.isEmpty());
     }
 
     @Test
@@ -191,5 +194,30 @@ public class FizzBuzzAggregatorTest {
         assertEquals(outputTopic.readRecord().getValue(), Output.newBuilder().setFizzBuzz(1).build());
 
         assertTrue(outputTopic.isEmpty());
+    }
+
+    @Test
+    public void aggregatorShouldNotBeImpactedByNoneItem() {
+        //Given
+        final List<TestRecord<InputKey, Item>> inputValues = Arrays.asList(
+                new TestRecord<>(new InputKey("client-1"), new Item(ItemValue.FizzBuzz)),
+                new TestRecord<>(new InputKey("client-1"), new Item(ItemValue.None)),
+                new TestRecord<>(new InputKey("client-1"), new Item(ItemValue.None)),
+                new TestRecord<>(new InputKey("client-1"), new Item(ItemValue.None)),
+                new TestRecord<>(new InputKey("client-1"), new Item(ItemValue.None))
+        );
+
+        //When
+        inputTopic.pipeRecordList(inputValues);
+
+        //Then
+        List<Output> results = outputTopic.readRecordsToList()
+                .stream()
+                .map(TestRecord::getValue)
+                .collect(Collectors.toList());
+
+        assertThat(results, everyItem(hasProperty("fizz", is(0))));
+        assertThat(results, everyItem(hasProperty("buzz", is(0))));
+        assertThat(results, everyItem(hasProperty("fizzBuzz", is(1))));
     }
 }

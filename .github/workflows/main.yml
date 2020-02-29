@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v1
 
       - name: Checkout Fizz Buzz HEAD^
-        run: git checkout HEAD^
+        run: git checkout master
 
       - name: Maven Unit Tests
         run: ./mvnw -B test jacoco:report
