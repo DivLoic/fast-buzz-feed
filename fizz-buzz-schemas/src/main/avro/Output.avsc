@@ -7,17 +7,20 @@
     {
       "name": "fizz",
       "type": "int",
-      "doc": ""
+      "doc": "",
+      "default": 0
     },
     {
       "name": "buzz",
       "type": "int",
-      "doc": ""
+      "doc": "",
+      "default": 0
     },
     {
       "name": "fizz_buzz",
       "type": "int",
-      "doc": ""
+      "doc": "",
+      "default": 0
     }
   ]
 }
