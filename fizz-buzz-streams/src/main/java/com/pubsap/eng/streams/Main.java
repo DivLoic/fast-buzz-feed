@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 
 import static com.pubsap.eng.common.FizzUtils.mapFromConfig;
@@ -72,7 +73,13 @@ public class Main {
 
         final KafkaStreams streams = new KafkaStreams(topology, properties);
 
-        Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            logger.warn("Closing the streaming application now!");
+            Optional
+                    .ofNullable(System.getenv("env"))
+                    .filter((value) -> value.equals("DEV"))
+                    .ifPresent((value) -> streams.close());
+        }));
 
         streams.cleanUp();
 

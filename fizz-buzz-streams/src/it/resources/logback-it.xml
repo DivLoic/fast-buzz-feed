@@ -3,7 +3,7 @@
     <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <pattern>
-                %yellow(%d{yyyy-MM-dd HH:mm:ss}) %cyan(${HOSTNAME}) %highlight([%p]) %green((%file:%line\)) - %msg%n
+                %green(%d{yyyy-MM-dd HH:mm:ss}) %cyan(${HOSTNAME}) %highlight([%p]) %magenta((%file:%line\)) - %msg%n
             </pattern>
         </encoder>
     </appender>
@@ -12,11 +12,11 @@
         <appender-ref ref="console" />
     </logger>
 
-    <logger name="io.confluent.developer" level="OFF" additivity="false">
+    <logger name="io.confluent.developer" level="WARN" additivity="false">
         <appender-ref ref="console" />
     </logger>
 
-    <root level="OFF">
+    <root level="WARN">
         <appender-ref ref="console" />
     </root>
 
