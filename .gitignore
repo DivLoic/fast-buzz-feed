@@ -1,6 +1,7 @@
 .idea/
 *.iml
 .secrets/
+.desktop/
 
 # Created by https://www.gitignore.io/api/java,macos,maven
 # Edit at https://www.gitignore.io/?templates=java,macos,maven

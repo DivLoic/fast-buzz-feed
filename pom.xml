@@ -58,6 +58,24 @@
         </repository>
     </repositories>
 
+    <profiles>
+        <profile>
+            <id>local</id>
+            <properties>
+                <env.deployment>local</env.deployment>
+            </properties>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+        </profile>
+        <profile>
+            <id>cloud</id>
+            <properties>
+                <env.deployment>cloud</env.deployment>
+            </properties>
+        </profile>
+    </profiles>
+
     <build>
         <plugins>
             <plugin>

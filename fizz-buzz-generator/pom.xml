@@ -12,6 +12,11 @@
 
     <artifactId>fizz-buzz-generator</artifactId>
 
+    <properties>
+        <docker.image.repo>gcr.io/loicmdivad-pse2020</docker.image.repo>
+        <docker.image.name>fizz-buzz-generator</docker.image.name>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -50,4 +55,30 @@
     </dependencies>
 
 
+    <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources/${env.deployment}</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+
+        <plugins>
+
+            <plugin>
+                <groupId>com.google.cloud.tools</groupId>
+                <artifactId>jib-maven-plugin</artifactId>
+                <version>${maven-jib-plugin.version}</version>
+                <configuration>
+                    <to>
+                        <image>${docker.image.repo}/${docker.image.name}</image>
+                        <tags>
+                            <tag>latest</tag>
+                            <tag>${project.version}</tag>
+                        </tags>
+                    </to>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
