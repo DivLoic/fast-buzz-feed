@@ -1,5 +1,6 @@
 resource "google_container_node_pool" "staging" {
-  provider = google-beta
+  provider   = google-beta
+  project    = var.gcp_project
   name       = "staging-node-poolzz"
   location   = var.gcp_region
   cluster    = var.kube_cluster

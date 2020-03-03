@@ -1,15 +1,15 @@
-terraform {
-  backend "gcs" {
-    bucket      = "fizzbuzz-streams-dev"
-    prefix      = "/metadata"
-    credentials = ".terraform/gcp-service-account-key.json"
-  }
+provider "google-beta" {
+  version      = "2.20"
+  project      = var.gcp_project
+  region       = var.gcp_region
+  access_token = data.google_service_account_access_token.default.access_token
 }
 
-provider "google-beta" {
-  credentials = file(var.gcp_credentials)
-  project     = var.gcp_project
-  region      = var.gcp_region
+terraform {
+  backend "gcs" {
+    bucket = "edml"
+    prefix = "/metadata/gitlab"
+  }
 }
 
 resource "google_container_cluster" "kubezz" {
@@ -24,6 +24,7 @@ resource "google_container_cluster" "kubezz" {
 module "staging" {
   source              = "./environments/staging"
   gcp_region          = var.gcp_region
+  gcp_project         = var.gcp_project
   kube_cluster        = google_container_cluster.kubezz.name
   available_locations = [data.google_compute_zones.available.names[0]]
 }
@@ -31,6 +32,7 @@ module "staging" {
 module "prod" {
   source              = "./environments/prod/"
   gcp_region          = var.gcp_region
+  gcp_project         = var.gcp_project
   kube_cluster        = google_container_cluster.kubezz.name
   available_locations = data.google_compute_zones.available.names
 }

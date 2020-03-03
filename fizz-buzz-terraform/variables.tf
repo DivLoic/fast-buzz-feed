@@ -1,4 +1,4 @@
-variable "gcp_credentials" {}
+variable "service_account_id" {}
 
 variable "gcp_project" {}
 
