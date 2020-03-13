@@ -1,29 +1,30 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: fizz-buzz-${ENV}-deployment
+  name: datagen-zz-${ENV}-deployment
   namespace: ${ENV}-fizzbuzz
   labels:
-    app: fizz-buzz-app
+    app: fizz-buzz-datagen-app
 spec:
+  replicas: 3
   selector:
     matchLabels:
-      app: fizz-buzz-streams
+      app: fizz-buzz-datagen
   template:
     metadata:
       labels:
-        app: fizz-buzz-streams
+        app: fizz-buzz-datagen
     spec:
       containers:
-        - name: fizz-buzz-${ENV}-container
-          image: gcr.io/loicmdivad-pse2020/fizz-buzz-streams:latest
+        - name: datagen-zz-${ENV}-container
+          image: gcr.io/loicmdivad-pse2020/fizz-buzz-generator:latest
           env:
-            - name: APPLICATION_ID
-              value: ${ENV}-fizzbuzz-app
             - name: INPUT_TOPIC_NAME
               value: input-event-${ENV}
             - name: OUTPUT_TOPIC_NAME
               value: output-event-${ENV}
+            - name: CLIENT_ID
+              value: "0"
 
             - name: API_KEY
               valueFrom:
@@ -61,5 +62,6 @@ spec:
                   name: ${ENV}-secretzz
                   key: sasl-class
             - name: ROOT_LOG_LVL
-              value: INFO
-
+              value: DEBUG
+            - name: FBZZ_LOG_LVL
+              value: DEBUG
